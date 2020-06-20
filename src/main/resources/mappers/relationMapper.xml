@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.cooing.www.member.dao.RelationMapper">
+
+	<insert id="insertFriend" parameterType="map">
+	insert into friend (friend_num,friend_id1,friend_id2)
+		values (friend_seq.nextval,#{person},#{friend})
+	</insert>	
+	
+	<select id="selectFriend" resultType="String" parameterType="String">
+	select friend_id2 as friend_id1
+		 from friend
+		 where friend_id1 = #{id}
+	union 
+	select friend_id1
+		from friend
+		where friend_id2 = #{id}
+	</select>
+	
+	<delete id="deleteFriend" parameterType="map">
+	delete from friend where
+			friend_num in
+			(
+			select friend_num
+		 	from friend
+		 	where friend_id1 = #{person}
+		 		and friend_id2 = #{friend}
+			union 
+			select friend_num
+			from friend
+			where friend_id2 = #{person}
+				and friend_id1 = #{friend}
+			)
+	</delete>
+	
+	<insert id="insertParty" parameterType="party">
+	insert into party (party_num,party_name,party_leader)
+		values (party_seq.nextval,#{party_name},#{party_leader})
+	</insert>
+	
+	<select id="searchPartyNumber" resultType="int" parameterType="String">
+	select party_num from party where party_name = #{party_name}
+	</select>
+	
+	<insert id="insertPartyMember" parameterType="partymember">
+	insert into partymember (partymember_num,party_num,member_id)
+		values (partymember_seq.nextval,#{party_num},#{member_id})
+	</insert>
+	
+	<select id="searchLeaderPartyName" resultType="String" parameterType="String">
+	select party_name from party where party_leader = #{party_leader}
+	</select>
+	
+	<select id="searchPartyByMemberid" resultType="party" parameterType="String">
+	SELECT *
+	FROM party
+	WHERE party_num in
+		(SELECT party_num
+		FROM partymember
+		WHERE member_id = #{member_id})
+	</select>
+	
+	<select id="searchPartyName" resultType="String" parameterType="int">
+	select party_name from party where party_num = #{party_num}
+	</select>
+	
+	<select id="searchParty" resultType="party" parameterType="String">
+	select * from party where party_name = #{party_name}
+	</select>
+	
+	<select id="searchPartyMember" resultType="partymember" parameterType="int">
+	select * from partymember where party_num = #{party_num}
+	</select>
+	
+	<delete id="deletePartyMember" parameterType="map">
+		delete from partymember where party_num=#{party_num} and member_id=#{member_id}
+	</delete>
+	<delete id="deleteLeaderParty" parameterType="int">
+		delete from party where party_num=#{party_num}
+	</delete>
+	<delete id="deleteMemberParty" parameterType="int">
+		delete from partymember where party_num=#{party_num}
+	</delete>
+	
+	<select id="searchPartyMember_by_party_name" resultType="partymember">
+	SELECT
+		*
+	FROM
+		(SELECT
+			p2.party_num,
+			p1.party_name,
+			p2.member_id
+		FROM
+			party p1
+		JOIN
+			partymember p2
+		ON
+			p1.party_num = p2.party_num) p
+	WHERE
+		party_name = #{party_name}
+	</select>
+	
+	<insert id="insertPartyMember_by_party_name" parameterType="partymember">
+	<selectKey keyProperty="party_num" resultType="Integer" order="BEFORE">
+	SELECT party_num
+	FROM party
+	WHERE party_name = #{party_name}
+	</selectKey>
+	INSERT INTO partymember(
+		partymember_num,
+		party_num,
+		member_id
+	)VALUES(
+		partymember_seq.nextval,
+		#{party_num},
+		#{member_id}
+	)
+	</insert>
+</mapper>
